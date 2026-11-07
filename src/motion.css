@@ -1,0 +1,47 @@
+/* The wingcat is the main source of motion; the rest of the page stays quiet. */
+.cat-friend{position:relative;display:inline-block;padding:0;border:0;background:transparent;color:inherit;line-height:0;border-radius:40%;isolation:isolate;overflow:visible;cursor:pointer}
+.cat-motion{display:block;animation:cat-breathe 4.8s ease-in-out infinite;transform-origin:50% 90%}
+.cat-friend .cat{display:block;overflow:visible}
+.cat-friend-small .cat-motion{animation-delay:-2.4s}
+.cat-tail{transform-origin:175px 190px;animation:cat-tail-swish 5s ease-in-out infinite}
+.cat-ear-left{transform-origin:84px 77px;animation:cat-ear-twitch 9s ease-in-out infinite}
+.cat-ear-right{transform-origin:184px 77px;animation:cat-ear-twitch 11s 2s ease-in-out infinite}
+.cat-eyes{transform-origin:130px 110px;animation:cat-blink 6.5s infinite}
+.cat-happy-eyes{opacity:0}
+.cat-love{transform-origin:224px 65px;animation:cat-heartbeat 4s ease-in-out infinite}
+.cat-greeting{position:absolute;bottom:96%;left:50%;width:max-content;max-width:210px;transform:translate(-50%,5px);padding:10px 12px;border:1px solid #dcdcc8;border-radius:12px 12px 12px 3px;background:#fffdf3;box-shadow:0 5px 15px #34472b0d;font:11px/1.5 'DM Sans',sans-serif;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:3}
+.cat-friend:hover .cat-greeting,.cat-friend:focus-visible .cat-greeting,.cat-friend.is-purring .cat-greeting{opacity:1;transform:translate(-50%,-3px)}
+.cat-friend:hover .cat-head,.cat-friend:focus-visible .cat-head{transform:rotate(-4deg);transform-origin:130px 173px;transition:transform .3s}
+.cat-friend.is-purring .cat-motion{animation:cat-purr .22s ease-in-out 8}
+.cat-friend.is-purring .cat-eyes{opacity:0;animation:none}
+.cat-friend.is-purring .cat-happy-eyes{opacity:1}
+.cat-friend.is-purring .cat-tail{animation-duration:.8s}
+.pet-hearts{position:absolute;inset:0;pointer-events:none;font:26px/1 serif;color:#ba7968;opacity:0}
+.pet-hearts span{position:absolute;left:20%;top:30%}
+.pet-hearts span:nth-child(2){left:70%;top:20%;font-size:20px}
+.pet-hearts span:nth-child(3){left:45%;top:15%;font-size:16px}
+.is-purring .pet-hearts{animation:pet-love 2.2s ease-out both}
+.hero-copy{animation:soft-arrival .65s ease-out both}
+.hero-art{animation:soft-arrival .85s .12s ease-out both}
+.star-one{animation:star-turn 18s linear infinite}
+.star-two{animation:star-glow 5s ease-in-out infinite}
+.card{animation:soft-arrival .45s var(--entrance-delay,0ms) ease-out both}
+.place-card,.nearby-panel{animation:soft-arrival .35s ease-out both}
+.primary,.google-search,.chip{transition:transform .18s,background .18s,box-shadow .18s}
+.primary:hover,.google-search:hover{transform:translateY(-2px);box-shadow:0 4px 10px #34472b12}
+.primary:active,.google-search:active,.chip:active{transform:scale(.97)}
+.save-button.is-saved svg,.place-actions button[aria-pressed="true"] svg{animation:saved-pop .35s ease-out}
+dialog[open]{animation:soft-arrival .22s ease-out}
+@keyframes cat-breathe{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-4px) rotate(1deg)}}
+@keyframes cat-tail-swish{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(9deg)}}
+@keyframes cat-ear-twitch{0%,75%,85%,100%{transform:rotate(0)}78%{transform:rotate(-9deg)}82%{transform:rotate(5deg)}}
+@keyframes cat-blink{0%,42%,46%,73%,77%,100%{transform:scaleY(1)}44%,75%{transform:scaleY(.08)}}
+@keyframes cat-heartbeat{0%,70%,100%{transform:scale(1)}78%{transform:scale(1.15)}86%{transform:scale(1)}93%{transform:scale(1.1)}}
+@keyframes cat-purr{0%,100%{transform:translateX(-1px) rotate(-1deg)}50%{transform:translateX(1px) rotate(1deg)}}
+@keyframes pet-love{0%{opacity:0;transform:translateY(4px) scale(.8)}20%{opacity:1}85%{opacity:.7}100%{opacity:0;transform:translateY(-38px) scale(1.1)}}
+@keyframes soft-arrival{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes star-turn{to{transform:rotate(360deg)}}
+@keyframes star-glow{0%,100%{opacity:.55;transform:scale(.9)}50%{opacity:1;transform:scale(1.08)}}
+@keyframes saved-pop{0%,100%{transform:scale(1)}45%{transform:scale(1.3)}}
+@media(max-width:700px){.cat-sticker .cat-greeting{left:auto;right:0;transform:translateY(5px)}.cat-sticker .cat-friend:hover .cat-greeting,.cat-sticker .is-purring .cat-greeting,.cat-sticker .cat-friend:focus-visible .cat-greeting{transform:translateY(-3px)}}
+@media(prefers-reduced-motion:reduce){.cat-friend *,.hero-copy,.hero-art,.star,.card,.place-card,.nearby-panel,dialog[open]{animation:none!important;transition:none!important}.primary:hover,.google-search:hover,.primary:active,.google-search:active,.chip:active,.cat-friend:hover .cat-head,.cat-friend:focus-visible .cat-head{transform:none}.is-purring .pet-hearts{opacity:1}.card:hover{transform:none}}
