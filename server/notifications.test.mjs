@@ -17,3 +17,8 @@ test('uses the configured recipient and stable provider idempotency key',async()
 test('reports sender restrictions without exposing provider response or key',async()=>{
  await assert.rejects(sendReplyEmail(invitation,{key:'private-key',to:'owner@example.test',fetcher:async()=>({ok:false,status:403})}),/sender or recipient/);
 });
+
+test('non-dinner reply email names the activity and omits dinner cuisine',()=>{
+ const mail=replyEmail({...invitation,response:{...invitation.response,activity:'Mini golf',cuisine:null}},{to:'owner@example.test'});
+ assert.match(mail.text,/Activity: Mini golf/);assert.equal(mail.text.includes('Dinner:'),false);
+});

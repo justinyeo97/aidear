@@ -5,8 +5,9 @@ export function replyEmail(invitation,{to,from='aidear <onboarding@resend.dev>'}
   if(reply.date){
     const date=new Intl.DateTimeFormat('en-MY',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'Asia/Kuala_Lumpur'}).format(new Date(reply.date+'T12:00:00+08:00'));
     const time=new Intl.DateTimeFormat('en-MY',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:'Asia/Kuala_Lumpur'}).format(new Date(`${reply.date}T${reply.time}:00+08:00`));
-    lines.push(`Day: ${date}`,`Time: ${time} (Malaysia time, GMT+8)`,`Dinner: ${reply.cuisine}`);
+    lines.push(`Day: ${date}`,`Time: ${time} (Malaysia time, GMT+8)`,`Activity: ${reply.activity || 'Dinner'}`);
   }
+  if(reply.date&&(!reply.activity||reply.activity==='Dinner'))lines.push(`Dinner: ${reply.cuisine}`);
   if(reply.note)lines.push('',`Her note: ${reply.note}`);
   lines.push('','See the plan: https://aidear-iota.vercel.app/?owner=1','','Sent by aidear. Your owner access code is never included in this email.');
   return {from,to:[to],subject:`${invitation.recipient.replace(/[\r\n]/g,' ')} got back to you`,text:lines.join('\n')};

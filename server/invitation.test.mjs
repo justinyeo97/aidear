@@ -92,3 +92,13 @@ test('same invitation accepts another reply, preserves history, and notifies aga
  const guest=await request('view',{id});assert.equal('responseHistory' in guest.data.invitation,false);
  await request('reply',{id,body});assert.equal(calls,2);assert.equal(docs.get(id).data.response.cuisine,'Italian');
 });
+
+test('activity choices only require a cuisine for dinner',()=>{
+ const body={status:'accepted',date:suggestedDates()[0],time:'19:00'};
+ assert.equal(validateReply({...body,activity:'Mini golf'}).cuisine,null);
+ assert.equal(validateReply({...body,activity:'Movies',cuisine:'Italian'}).cuisine,null);
+ assert.equal(validateReply({...body,activity:'Coffee'}).activity,'Coffee');
+ assert.throws(()=>validateReply({...body,activity:'Dinner'}),/cuisine/);
+ assert.throws(()=>validateReply({...body,activity:'unknown'}),/activity/);
+ assert.equal(validateReply({...body,cuisine:'Japanese'}).activity,'Dinner');
+});

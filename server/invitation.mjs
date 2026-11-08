@@ -1,6 +1,7 @@
 import {createHmac,randomBytes,timingSafeEqual} from 'node:crypto';
 import {get,put,list,del,BlobPreconditionFailedError} from '@vercel/blob';
 import {sendReplyEmail} from './notifications.mjs';
+import {dateActivities,defaultInviteMessage,invitationMessage} from '../src/dateOptions.js';
 const COOKIE='aidear_owner';
 const isId=id=>typeof id==='string'&&/^[a-f0-9]{48}$/.test(id);
 export const cuisines=['Japanese','Italian','Korean','Chinese','Thai','Western','Surprise me'];
@@ -15,8 +16,10 @@ export function validateReply(body){
   if(body.status==='declined')return {status:body.status,note:String(body.note||'').trim().slice(0,500)};
   if(typeof body.date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(body.date)||Number.isNaN(Date.parse(body.date+'T12:00:00Z'))||new Date(body.date+'T12:00:00Z').toISOString().slice(0,10)!==body.date||body.date<localToday())throw Error('Choose today or a future date.');
   if(typeof body.time!=='string'||!/^([01]\d|2[0-3]):[0-5]\d$/.test(body.time))throw Error('Choose a preferred time.');
-  if(!cuisines.includes(body.cuisine))throw Error('Choose a dinner cuisine.');
-  return {status:body.status,date:body.date,time:body.time,cuisine:body.cuisine,note:String(body.note||'').trim().slice(0,500),timezone:'Asia/Kuala_Lumpur'};
+  const activity=body.activity===undefined?'Dinner':body.activity;
+  if(!dateActivities.some(option=>option.name===activity))throw Error('Choose an activity.');
+  if(activity==='Dinner'&&!cuisines.includes(body.cuisine))throw Error('Choose a dinner cuisine.');
+  return {status:body.status,date:body.date,time:body.time,activity,cuisine:activity==='Dinner'?body.cuisine:null,note:String(body.note||'').trim().slice(0,500),timezone:'Asia/Kuala_Lumpur'};
 }
 export const blobStore={
   async remove(id,etag){return del(`invitations/${id}.json`,{ifMatch:etag});},
@@ -58,13 +61,13 @@ export function invitationHandler({store=blobStore,key=()=>process.env.INVITE_AD
       if(['owner','create','seen','revoke','retry-email'].includes(action)&&!owner)return send(401,{error:'Sign in to your private invitation desk.'});
       if(action==='owner'&&req.method==='GET')return send(200,{invitations:await store.all(),defaults:{dates:suggestedDates(),cuisines},emailConfigured:emailConfigured()});
       if(action==='create'&&req.method==='POST'){
-        const body=await readBody(req);const recipient=String(body.recipient||'Mia').trim(),sender=String(body.sender||'Justin').trim(),message=String(body.message||"Let's grab dinner and hang out. You pick when and what we eat, I'll sort out the rest :)").trim();
+        const body=await readBody(req);const recipient=String(body.recipient||'Mia').trim(),sender=String(body.sender||'Justin').trim(),message=String(body.message||defaultInviteMessage).trim();
         if(!recipient||recipient.length>60||!sender||sender.length>60||message.length>700)return send(400,{error:'Add short names and a message under 700 characters.'});
         const record={id:randomBytes(24).toString('hex'),recipient,sender,message,dates:suggestedDates(),cuisines,createdAt:new Date().toISOString(),response:null,seenAt:null};await store.write(record);return send(201,{invitation:record});
       }
       const id=url.searchParams.get('id');if(!isId(id))return send(404,{error:'This invitation link is not available.'});
       const record=await store.read(id);if(!record)return send(404,{error:'This invitation link is not available.'});
-      if(action==='view'&&req.method==='GET'){const {response,responseHistory,seenAt,notification,...invite}=record.data;return send(200,{invitation:{...invite,message:invite.message==="A little time for just the two of us. Pick a day, a time, and something delicious. I will take care of the rest."?"Let's grab dinner and hang out. You pick when and what we eat, I'll sort out the rest :)":invite.message,dates:suggestedDates(),responded:Boolean(response)}});}
+      if(action==='view'&&req.method==='GET'){const {response,responseHistory,seenAt,notification,...invite}=record.data;return send(200,{invitation:{...invite,message:invitationMessage(invite.message),dates:suggestedDates(),responded:Boolean(response)}});}
       if(action==='reply'&&req.method==='POST'){
         const body=await readBody(req);const reply=validateReply(body);
         const submissionId=typeof body.submissionId==='string'&&/^[a-zA-Z0-9-]{16,64}$/.test(body.submissionId)?body.submissionId:sign(JSON.stringify(reply),secret);
