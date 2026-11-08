@@ -1,5 +1,6 @@
 import {createHmac,randomBytes,timingSafeEqual} from 'node:crypto';
 import {get,put,list,del,BlobPreconditionFailedError} from '@vercel/blob';
+import {sendReplyEmail} from './notifications.mjs';
 const COOKIE='aidear_owner';
 const isId=id=>typeof id==='string'&&/^[a-f0-9]{48}$/.test(id);
 export const cuisines=['Japanese','Italian','Korean','Chinese','Thai','Western','Surprise me'];
@@ -25,7 +26,16 @@ export const blobStore={
 };
 const limits=new Map();
 async function readBody(req){if(req.body!==undefined){const text=typeof req.body==='string'?req.body:JSON.stringify(req.body);if(Buffer.byteLength(text)>8000)throw Error('Reply is too long.');return JSON.parse(text);}let text='';for await(const part of req){text+=part;if(Buffer.byteLength(text)>8000)throw Error('Reply is too long.');}return JSON.parse(text||'{}');}
-export function invitationHandler({store=blobStore,key=()=>process.env.INVITE_ADMIN_KEY}={}){
+export function invitationHandler({store=blobStore,key=()=>process.env.INVITE_ADMIN_KEY,notify=sendReplyEmail,emailConfigured=()=>Boolean(process.env.RESEND_API_KEY&&process.env.NOTIFICATION_EMAIL)}={}){
+  async function notifyOwner(invitation){
+    let notification;
+    try{notification={status:'sent',...await notify(invitation)};}
+    catch(error){notification={status:'failed',error:error.name==='TimeoutError'?'Email delivery was not confirmed in time. You can retry safely within 24 hours.':error instanceof TypeError?'Email service could not be reached. Try again later.':error.message,attemptedAt:new Date().toISOString()};}
+    // Merge into the latest copy so an owner's mark-as-seen isn't overwritten.
+    try{for(let attempt=0;attempt<2;attempt++){const latest=await store.read(invitation.id);if(!latest||latest.data.notification?.status==='sent')return latest?.data.notification||notification;try{await store.write({...latest.data,notification},latest.etag);return notification;}catch(error){if(!(error instanceof BlobPreconditionFailedError)||attempt===1)throw error;}}}
+    catch{console.error('Could not persist email delivery status');}
+    return notification;
+  }
   return async(req,res)=>{
     const url=new URL(req.url,'http://localhost');const action=url.searchParams.get('action')||'view';
     const send=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'});res.end(JSON.stringify(data));};
@@ -45,8 +55,8 @@ export function invitationHandler({store=blobStore,key=()=>process.env.INVITE_AD
         res.setHeader('Set-Cookie',`${COOKIE}=${ownerSession(secret)}; HttpOnly; SameSite=Strict; Path=/api; Max-Age=604800${process.env.VERCEL?'; Secure':''}`);return send(200,{ok:true});
       }
       if(action==='logout'&&req.method==='POST'){res.setHeader('Set-Cookie',`${COOKIE}=; HttpOnly; SameSite=Strict; Path=/api; Max-Age=0${process.env.VERCEL?'; Secure':''}`);return send(200,{ok:true});}
-      if(['owner','create','seen','revoke'].includes(action)&&!owner)return send(401,{error:'Sign in to your private invitation desk.'});
-      if(action==='owner'&&req.method==='GET')return send(200,{invitations:await store.all(),defaults:{dates:suggestedDates(),cuisines}});
+      if(['owner','create','seen','revoke','retry-email'].includes(action)&&!owner)return send(401,{error:'Sign in to your private invitation desk.'});
+      if(action==='owner'&&req.method==='GET')return send(200,{invitations:await store.all(),defaults:{dates:suggestedDates(),cuisines},emailConfigured:emailConfigured()});
       if(action==='create'&&req.method==='POST'){
         const body=await readBody(req);const recipient=String(body.recipient||'Mia').trim(),sender=String(body.sender||'Justin').trim(),message=String(body.message||'A little time for just the two of us. Pick a day, a time, and something delicious. I will take care of the rest.').trim();
         if(!recipient||recipient.length>60||!sender||sender.length>60||message.length>700)return send(400,{error:'Add short names and a message under 700 characters.'});
@@ -54,10 +64,19 @@ export function invitationHandler({store=blobStore,key=()=>process.env.INVITE_AD
       }
       const id=url.searchParams.get('id');if(!isId(id))return send(404,{error:'This invitation link is not available.'});
       const record=await store.read(id);if(!record)return send(404,{error:'This invitation link is not available.'});
-      if(action==='view'&&req.method==='GET'){const {response,seenAt,...invite}=record.data;return send(200,{invitation:{...invite,responded:Boolean(response)}});}
+      if(action==='view'&&req.method==='GET'){const {response,seenAt,notification,...invite}=record.data;return send(200,{invitation:{...invite,responded:Boolean(response)}});}
       if(action==='reply'&&req.method==='POST'){
         if(record.data.response)return send(200,{saved:true,alreadyReplied:true});
-        const body=await readBody(req);const reply=validateReply(body);await store.write({...record.data,response:{...reply,receivedAt:new Date().toISOString()},seenAt:null},record.etag);return send(200,{saved:true});
+        const body=await readBody(req);const reply=validateReply(body);const updated={...record.data,response:{...reply,receivedAt:new Date().toISOString()},seenAt:null,notification:{status:'pending'}};
+        await store.write(updated,record.etag);
+        await notifyOwner(updated);
+        return send(200,{saved:true});
+      }
+      if(action==='retry-email'&&req.method==='POST'){
+        if(!record.data.response)return send(400,{error:'No reply to email yet.'});
+        if(record.data.notification?.status==='sent')return send(200,{ok:true,notification:record.data.notification});
+        if(Date.now()-Date.parse(record.data.response.receivedAt)>23*3600000)return send(409,{error:'This reply is outside the safe retry window. Check Resend before sending another email.'});
+        const notification=await notifyOwner(record.data);return send(notification.status==='sent'?200:502,{ok:notification.status==='sent',notification,...(notification.status==='failed'?{error:notification.error}:{})});
       }
       if(action==='seen'&&req.method==='POST'){await store.write({...record.data,seenAt:new Date().toISOString()},record.etag);return send(200,{ok:true});}
       if(action==='revoke'&&req.method==='POST'){await store.remove(id,record.etag);return send(200,{ok:true});}

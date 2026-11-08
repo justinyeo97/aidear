@@ -5,3 +5,5 @@
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.button:hover,.button:active{transform:none}}
 
 .revoke-link{margin-left:auto;font-size:10px;background:none;border:0;color:#a08a78;text-decoration:underline}.invite-paper .button:disabled{cursor:wait}
+
+.email-status{border-top:1px solid #d9e2ca;margin:15px 0;padding-top:12px;display:flex;align-items:flex-start;gap:10px;flex-direction:column}.email-status>small{font-size:10px;color:#839173}
