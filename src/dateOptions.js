@@ -1,4 +1,10 @@
 export const CUSTOM_ACTIVITY='My own idea';
+export const rideOptions=[
+  {value:'pickup',label:'Yes, come get me',description:'Passenger princess mode: on.'},
+  {value:'own',label:"I'll make my own entrance",description:'Meet you there, looking cute.'},
+  {value:'decide',label:"Let's figure it out",description:'Transport is a future-us problem.'},
+];
+export const rideLabel=value=>rideOptions.find(option=>option.value===value)?.label || 'Not specified';
 export const dateActivities = [
   {name:CUSTOM_ACTIVITY,description:'Got something else in mind? Tell me'},
   {name:'Dinner',description:'Good food and a proper catch-up'},

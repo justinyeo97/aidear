@@ -1,3 +1,4 @@
+import {rideLabel} from '../src/dateOptions.js';
 export function replyEmail(invitation,{to,from='aidear <onboarding@resend.dev>'}={}) {
   const reply=invitation.response;
   const status={accepted:"It's a date!", 'another-day':'Another day works better.',declined:'Not this time.'}[reply.status];
@@ -8,6 +9,7 @@ export function replyEmail(invitation,{to,from='aidear <onboarding@resend.dev>'}
     lines.push(`Day: ${date}`,`Time: ${time} (Malaysia time, GMT+8)`,`Activity: ${reply.customActivity || reply.activity || 'Dinner'}`);
   }
   if(reply.date&&(!reply.activity||reply.activity==='Dinner'))lines.push(`Dinner: ${reply.cuisine}`);
+  if(reply.date&&reply.ride)lines.push(`Ride: ${rideLabel(reply.ride)}`);
   if(reply.note)lines.push('',`Her note: ${reply.note}`);
   lines.push('','See the plan: https://aidear-iota.vercel.app/?owner=1','','Sent by aidear. Your owner access code is never included in this email.');
   return {from,to:[to],subject:`${invitation.recipient.replace(/[\r\n]/g,' ')} got back to you`,text:lines.join('\n')};

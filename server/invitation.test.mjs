@@ -112,3 +112,10 @@ test('custom activities are validated, trimmed, and do not require a cuisine',()
  assert.throws(()=>validateReply({...body,customActivity:'a'.repeat(101)}),/activity/);
  assert.equal(validateReply({...body,activity:'Movies',customActivity:'Ignored'}).customActivity,null);
 });
+
+test('ride preference accepts only the offered choices and supports older replies',()=>{
+ const body={status:'accepted',date:suggestedDates()[0],time:'19:00',activity:'Movies'};
+ for(const ride of ['pickup','own','decide'])assert.equal(validateReply({...body,ride}).ride,ride);
+ assert.equal(validateReply(body).ride,null);
+ assert.throws(()=>validateReply({...body,ride:'invalid'}),/ride/);
+});

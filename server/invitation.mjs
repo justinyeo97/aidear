@@ -1,7 +1,7 @@
 import {createHmac,randomBytes,timingSafeEqual} from 'node:crypto';
 import {get,put,list,del,BlobPreconditionFailedError} from '@vercel/blob';
 import {sendReplyEmail} from './notifications.mjs';
-import {dateActivities,defaultInviteMessage,invitationMessage,CUSTOM_ACTIVITY} from '../src/dateOptions.js';
+import {dateActivities,defaultInviteMessage,invitationMessage,CUSTOM_ACTIVITY,rideOptions} from '../src/dateOptions.js';
 const COOKIE='aidear_owner';
 const isId=id=>typeof id==='string'&&/^[a-f0-9]{48}$/.test(id);
 export const cuisines=['Japanese','Italian','Korean','Chinese','Thai','Western','Surprise me'];
@@ -21,7 +21,8 @@ export function validateReply(body){
   const customActivity=typeof body.customActivity==='string'?body.customActivity.trim():'';
   if(activity===CUSTOM_ACTIVITY&&(!customActivity||customActivity.length>100))throw Error('Choose your own activity in 1 to 100 characters.');
   if(activity==='Dinner'&&!cuisines.includes(body.cuisine))throw Error('Choose a dinner cuisine.');
-  return {status:body.status,date:body.date,time:body.time,activity,customActivity:activity===CUSTOM_ACTIVITY?customActivity:null,cuisine:activity==='Dinner'?body.cuisine:null,note:String(body.note||'').trim().slice(0,500),timezone:'Asia/Kuala_Lumpur'};
+  if(body.ride!==undefined&&body.ride!==null&&!rideOptions.some(option=>option.value===body.ride))throw Error('Choose a ride option.');
+  return {status:body.status,date:body.date,time:body.time,activity,ride:body.ride||null,customActivity:activity===CUSTOM_ACTIVITY?customActivity:null,cuisine:activity==='Dinner'?body.cuisine:null,note:String(body.note||'').trim().slice(0,500),timezone:'Asia/Kuala_Lumpur'};
 }
 export const blobStore={
   async remove(id,etag){return del(`invitations/${id}.json`,{ifMatch:etag});},

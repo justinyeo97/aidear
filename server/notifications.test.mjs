@@ -27,3 +27,8 @@ test('email includes the suggested activity rather than its picker label',()=>{
  const mail=replyEmail({...invitation,response:{...invitation.response,activity:'My own idea',customActivity:'A bookstore crawl',cuisine:null}},{to:'owner@example.test'});
  assert.match(mail.text,/Activity: A bookstore crawl/);assert.equal(mail.text.includes('Activity: My own idea'),false);
 });
+
+test('email includes her ride preference',()=>{
+ const mail=replyEmail({...invitation,response:{...invitation.response,ride:'pickup'}},{to:'owner@example.test'});
+ assert.match(mail.text,/Ride: Yes, come get me/);
+});
