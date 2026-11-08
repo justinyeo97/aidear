@@ -1,15 +1,15 @@
 export function replyEmail(invitation,{to,from='aidear <onboarding@resend.dev>'}={}) {
   const reply=invitation.response;
-  const status={accepted:'Yes, it is a date!', 'another-day':'She suggested another day.',declined:'Not this time.'}[reply.status];
+  const status={accepted:"It's a date!", 'another-day':'Another day works better.',declined:'Not this time.'}[reply.status];
   const lines=[`A reply from ${invitation.recipient}`, '',status];
   if(reply.date){
     const date=new Intl.DateTimeFormat('en-MY',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'Asia/Kuala_Lumpur'}).format(new Date(reply.date+'T12:00:00+08:00'));
     const time=new Intl.DateTimeFormat('en-MY',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:'Asia/Kuala_Lumpur'}).format(new Date(`${reply.date}T${reply.time}:00+08:00`));
-    lines.push(`Preferred day: ${date}`,`Preferred time: ${time} (Malaysia time, GMT+8)`,`Dinner cuisine: ${reply.cuisine}`);
+    lines.push(`Day: ${date}`,`Time: ${time} (Malaysia time, GMT+8)`,`Dinner: ${reply.cuisine}`);
   }
   if(reply.note)lines.push('',`Her note: ${reply.note}`);
-  lines.push('','View your private invitation desk: https://aidear-iota.vercel.app/?owner=1','','Sent by aidear. Your owner access code is never included in this email.');
-  return {from,to:[to],subject:`${invitation.recipient.replace(/[\r\n]/g,' ')} replied to your date invitation`,text:lines.join('\n')};
+  lines.push('','See the plan: https://aidear-iota.vercel.app/?owner=1','','Sent by aidear. Your owner access code is never included in this email.');
+  return {from,to:[to],subject:`${invitation.recipient.replace(/[\r\n]/g,' ')} got back to you`,text:lines.join('\n')};
 }
 
 export async function sendReplyEmail(invitation,{fetcher=fetch,key=process.env.RESEND_API_KEY,to=process.env.NOTIFICATION_EMAIL,from=process.env.EMAIL_FROM}={}) {

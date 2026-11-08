@@ -58,13 +58,13 @@ export function invitationHandler({store=blobStore,key=()=>process.env.INVITE_AD
       if(['owner','create','seen','revoke','retry-email'].includes(action)&&!owner)return send(401,{error:'Sign in to your private invitation desk.'});
       if(action==='owner'&&req.method==='GET')return send(200,{invitations:await store.all(),defaults:{dates:suggestedDates(),cuisines},emailConfigured:emailConfigured()});
       if(action==='create'&&req.method==='POST'){
-        const body=await readBody(req);const recipient=String(body.recipient||'Mia').trim(),sender=String(body.sender||'Justin').trim(),message=String(body.message||'A little time for just the two of us. Pick a day, a time, and something delicious. I will take care of the rest.').trim();
+        const body=await readBody(req);const recipient=String(body.recipient||'Mia').trim(),sender=String(body.sender||'Justin').trim(),message=String(body.message||"Let's grab dinner and hang out. You pick when and what we eat, I'll sort out the rest :)").trim();
         if(!recipient||recipient.length>60||!sender||sender.length>60||message.length>700)return send(400,{error:'Add short names and a message under 700 characters.'});
         const record={id:randomBytes(24).toString('hex'),recipient,sender,message,dates:suggestedDates(),cuisines,createdAt:new Date().toISOString(),response:null,seenAt:null};await store.write(record);return send(201,{invitation:record});
       }
       const id=url.searchParams.get('id');if(!isId(id))return send(404,{error:'This invitation link is not available.'});
       const record=await store.read(id);if(!record)return send(404,{error:'This invitation link is not available.'});
-      if(action==='view'&&req.method==='GET'){const {response,responseHistory,seenAt,notification,...invite}=record.data;return send(200,{invitation:{...invite,dates:suggestedDates(),responded:Boolean(response)}});}
+      if(action==='view'&&req.method==='GET'){const {response,responseHistory,seenAt,notification,...invite}=record.data;return send(200,{invitation:{...invite,message:invite.message==="A little time for just the two of us. Pick a day, a time, and something delicious. I will take care of the rest."?"Let's grab dinner and hang out. You pick when and what we eat, I'll sort out the rest :)":invite.message,dates:suggestedDates(),responded:Boolean(response)}});}
       if(action==='reply'&&req.method==='POST'){
         const body=await readBody(req);const reply=validateReply(body);
         const submissionId=typeof body.submissionId==='string'&&/^[a-zA-Z0-9-]{16,64}$/.test(body.submissionId)?body.submissionId:sign(JSON.stringify(reply),secret);
