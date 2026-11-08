@@ -1,13 +1,8 @@
-import {defineConfig, loadEnv} from 'vite';
-import {placesMiddleware} from './server/places.mjs';
-
-export default defineConfig(({mode}) => {
-  const env = loadEnv(mode, process.cwd(), 'SERPAPI_');
-  return {
-    plugins: [{
-      name: 'aidear-venue-api',
-      configureServer(server) { server.middlewares.use(placesMiddleware(() => process.env.SERPAPI_API_KEY || env.SERPAPI_API_KEY)); },
-      configurePreviewServer(server) { server.middlewares.use(placesMiddleware(() => process.env.SERPAPI_API_KEY || env.SERPAPI_API_KEY)); },
-    }],
-  };
+import {defineConfig,loadEnv} from 'vite';
+import {invitationHandler} from './server/invitation.mjs';
+export default defineConfig(({mode})=>{
+ const env=loadEnv(mode,process.cwd(),'');
+ for(const name of ['INVITE_ADMIN_KEY','BLOB_READ_WRITE_TOKEN','BLOB_STORE_ID'])if(env[name]&&!process.env[name])process.env[name]=env[name];
+ function install(server){const handle=invitationHandler();server.middlewares.use((req,res,next)=>{if(new URL(req.url,'http://localhost').pathname==='/api/invitation')return handle(req,res);next();});}
+ return {plugins:[{name:'aidear-invitation-api',configureServer:install,configurePreviewServer:install}]};
 });

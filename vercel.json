@@ -4,6 +4,6 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
-    "api/places.js": { "maxDuration": 60 }
+    "api/invitation.js": { "maxDuration": 30 }
   }
 }

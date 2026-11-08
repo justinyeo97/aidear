@@ -1,38 +1,31 @@
-# 爱dear (aidear)
+# 爱dear — a little invitation
 
-爱 (ài) means love in Chinese; paired with dear, aidear sounds like idea.
+A personal date invitation for Mia. The public activity-planning app has been replaced with a simple invitation, reply form, and private owner desk.
 
-A React + Vite date planner with a cat concierge, in-app venue discovery through SerpApi, budget and specific activity filters, detailed date plans, and browser-local saved favourites.
+## Flow
 
-## Run locally
+1. Open the private owner access link or enter `INVITE_ADMIN_KEY` at `/?owner=1`.
+2. Create an invitation with names and a personal note, then copy the generated link and send it yourself.
+3. The recipient opens the invitation, accepts or suggests another day, and chooses a date, time and dinner cuisine. Declining is also supported.
+4. The owner desk refreshes every 15 seconds while visible and shows an unread-reply banner and tab-title count. This is an in-app notification, not email or a background push notification.
 
-```sh
-npm.cmd install
-npm.cmd run dev
+All dates and times use Asia/Kuala_Lumpur (MYT, GMT+8). Each invitation offers the next three Friday/Saturday/Sunday dates and accepts a different future date, custom time, and an optional note.
+
+## Run
+
+Use Node 20 or newer. Install with `npm.cmd install`, start with `npm.cmd run dev`, build with `npm.cmd run build`, and preview with `npm.cmd run preview`. Live Server cannot run the backend.
+
+Private server configuration in Git-ignored `.env.local`:
+
+```text
+INVITE_ADMIN_KEY=<strong-random-owner-access-code>
+BLOB_STORE_ID=<connected-private-vercel-blob-store>
 ```
 
-Build with `npm.cmd run build`. Preview the production build with `npm.cmd run preview`.
+Local Blob access also needs a development OIDC session or a `BLOB_READ_WRITE_TOKEN`. Production uses the project's connected private Blob store and Vercel OIDC. Set the owner key as a sensitive production environment variable; never prefix it with `VITE_`.
 
-Open the URL printed by Vite (usually http://127.0.0.1:5173). You can also use **Terminal → Run Task → Start aidear** in VS Code.
+The private owner link contains the key in the URL fragment. The app exchanges it for an HttpOnly, SameSite=Strict session cookie and removes the fragment. Keep the owner link private; send only the generated invitation link to the recipient. Anyone holding a recipient invitation link may view and answer that invitation. Reply details are available only to the authenticated owner. Responses use conditional writes to avoid silently overwriting another reply, and repeat submissions are idempotent.
 
-### VS Code Live Server
+Invitations and replies persist in private Vercel Blob JSON documents. Owner sessions last seven days. Revoking an invitation deletes its stored reply and invalidates its link. Browser-local favourites from the retired planner are not used or uploaded.
 
-Go Live can show the compiled layout, but cannot run venue searches. Use `npm.cmd run dev` or `npm.cmd run preview` for the complete app, including its private server-side search endpoint.
-
-Enter a city or neighbourhood and budget, then submit Find my date. Choose or change the activity type directly above the resulting date ideas; suggestions update immediately without resubmitting the planner. Find nearby automatically searches the chosen area without a second form. Change preferences returns to the original planner. Each card and detailed plan has a Find nearby button that loads venue cards inside aidear. Heart a venue to save it under Saved plans → Favourite places. Place favourites use the `aidear-saved-places` localStorage key; date ideas use `aidear-saved`.
-
-## Build a date itinerary
-
-Use **Add to my date** on an activity card to start an itinerary. Use the same action on a nearby venue to attach it to that activity's unassigned stop. Add dinner and dessert the same way, then open **My date** in the navigation.
-
-The builder supports a title, area, optional date, start times, editable estimated costs for two, personal notes, reordering and removing stops. It totals the estimates and flags when the whole outing exceeds the selected budget. Totals exclude transport and are not venue quotes.
-
-Draft changes are kept in this browser automatically. **Save this date** creates a named itinerary; saved itineraries can be reopened, updated or deleted from **My date**. Data uses the `aidear-itineraries` localStorage key and does not sync across devices. Storage errors are displayed in the builder.
-
-## Private search configuration
-
-Create `.env.local` with `SERPAPI_API_KEY=your_key_here`, then restart Vite. The file is ignored by Git. Never prefix this key with `VITE_` or put it in React code. The `/api/places` endpoint calls SerpApi server-side, normalizes the response, caches successful requests for ten minutes, and limits uncached searches per client. No API key is sent to the browser.
-
-Vite's dev and preview servers both run the endpoint locally. Vercel uses `api/places.js` to run the same handler as a serverless function. Set `SERPAPI_API_KEY` as a sensitive production environment variable in Vercel before deploying. `vercel.json` configures the Vite build and function timeout; private environment files are excluded from Git and direct deployment uploads. Caches and rate limits are per running instance, not globally shared. SerpApi searches consume account credits. Location queries are sent to SerpApi; no geolocation permissions are requested.
-
-Favourites are saved in localStorage. Images load from Unsplash; fonts from Google Fonts. Prices are illustrative planning estimates in MYR, not venue prices. Personal notes only last while the current plan is open.
+Run backend and gesture checks with `node --test server/invitation.test.mjs src/headScratch.test.js`.
