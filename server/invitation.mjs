@@ -16,13 +16,14 @@ export function validateReply(body){
   if(body.status==='declined')return {status:body.status,note:String(body.note||'').trim().slice(0,500)};
   if(typeof body.date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(body.date)||Number.isNaN(Date.parse(body.date+'T12:00:00Z'))||new Date(body.date+'T12:00:00Z').toISOString().slice(0,10)!==body.date||body.date<localToday())throw Error('Choose today or a future date.');
   if(typeof body.time!=='string'||!/^([01]\d|2[0-3]):[0-5]\d$/.test(body.time))throw Error('Choose a preferred time.');
-  const activity=body.activity===undefined?'Dinner':body.activity;
-  if(!dateActivities.some(option=>option.name===activity))throw Error('Choose an activity.');
+  const activities=body.activities===undefined?[body.activity===undefined?'Dinner':body.activity]:body.activities;
+  if(!Array.isArray(activities)||!activities.length||activities.length>dateActivities.length||new Set(activities).size!==activities.length||!activities.every(name=>dateActivities.some(option=>option.name===name)))throw Error('Choose an activity or several activities.');
+  const activity=activities[0];
   const customActivity=typeof body.customActivity==='string'?body.customActivity.trim():'';
-  if(activity===CUSTOM_ACTIVITY&&(!customActivity||customActivity.length>100))throw Error('Choose your own activity in 1 to 100 characters.');
-  if(activity==='Dinner'&&!cuisines.includes(body.cuisine))throw Error('Choose a dinner cuisine.');
+  if(activities.includes(CUSTOM_ACTIVITY)&&(!customActivity||customActivity.length>100))throw Error('Choose your own activity in 1 to 100 characters.');
+  if(activities.includes('Dinner')&&!cuisines.includes(body.cuisine))throw Error('Choose a dinner cuisine.');
   if(body.ride!==undefined&&body.ride!==null&&!rideOptions.some(option=>option.value===body.ride))throw Error('Choose a ride option.');
-  return {status:body.status,date:body.date,time:body.time,activity,ride:body.ride||null,customActivity:activity===CUSTOM_ACTIVITY?customActivity:null,cuisine:activity==='Dinner'?body.cuisine:null,note:String(body.note||'').trim().slice(0,500),timezone:'Asia/Kuala_Lumpur'};
+  return {status:body.status,date:body.date,time:body.time,activity,activities,ride:body.ride||null,customActivity:activities.includes(CUSTOM_ACTIVITY)?customActivity:null,cuisine:activities.includes('Dinner')?body.cuisine:null,note:String(body.note||'').trim().slice(0,500),timezone:'Asia/Kuala_Lumpur'};
 }
 export const blobStore={
   async remove(id,etag){return del(`invitations/${id}.json`,{ifMatch:etag});},

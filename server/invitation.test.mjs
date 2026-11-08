@@ -92,3 +92,11 @@ test('email failure returns an error and retry keeps its provider key without sa
  assert.equal((await request('reply',{id,body})).status,200);
  assert.equal(messages[0].response.id,messages[1].response.id);assert.deepEqual(docs.get(id),original);
 });
+
+test('multiple activities validate with dinner anywhere in the list',()=>{
+ const body={status:'accepted',date:suggestedDates()[0],time:'19:00',activities:['Coffee','Dinner','My own idea'],customActivity:'Bookstore crawl',cuisine:'Italian'};
+ const reply=validateReply(body);assert.deepEqual(reply.activities,body.activities);assert.equal(reply.cuisine,'Italian');assert.equal(reply.customActivity,'Bookstore crawl');
+ assert.throws(()=>validateReply({...body,cuisine:null}),/cuisine/);
+ for(const activities of [[],null,'Coffee',['unknown'],['Coffee','Coffee']])assert.throws(()=>validateReply({...body,activities}),/activity/);
+ assert.equal(validateReply({...body,activities:['Coffee','Movies']}).cuisine,null);
+});

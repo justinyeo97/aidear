@@ -20,15 +20,20 @@ test('reports sender restrictions without exposing provider response or key',asy
 
 test('non-dinner reply email names the activity and omits dinner cuisine',()=>{
  const mail=replyEmail({...invitation,response:{...invitation.response,activity:'Mini golf',cuisine:null}},{to:'owner@example.test'});
- assert.match(mail.text,/Activity: Mini golf/);assert.equal(mail.text.includes('Dinner:'),false);
+ assert.match(mail.text,/Activities: Mini golf/);assert.equal(mail.text.includes('Dinner:'),false);
 });
 
 test('email includes the suggested activity rather than its picker label',()=>{
  const mail=replyEmail({...invitation,response:{...invitation.response,activity:'My own idea',customActivity:'A bookstore crawl',cuisine:null}},{to:'owner@example.test'});
- assert.match(mail.text,/Activity: A bookstore crawl/);assert.equal(mail.text.includes('Activity: My own idea'),false);
+ assert.match(mail.text,/Activities: A bookstore crawl/);assert.equal(mail.text.includes('Activity: My own idea'),false);
 });
 
 test('email includes her ride preference',()=>{
  const mail=replyEmail({...invitation,response:{...invitation.response,ride:'pickup'}},{to:'owner@example.test'});
  assert.match(mail.text,/Ride: Lai/);
 });
+
+ test('email includes multiple activities, custom suggestion and dinner cuisine',()=>{
+ const mail=replyEmail({...invitation,response:{...invitation.response,activities:['Coffee','Dinner','My own idea'],customActivity:'Bookstore crawl',cuisine:'Italian'}},{to:'owner@example.test'});
+ assert.match(mail.text,/Activities: Coffee, Dinner, Bookstore crawl/);assert.match(mail.text,/Dinner: Italian/);
+ });

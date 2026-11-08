@@ -1,14 +1,16 @@
-import {rideLabel} from '../src/dateOptions.js';
+import {rideLabel, CUSTOM_ACTIVITY} from '../src/dateOptions.js';
 export function replyEmail(invitation,{to,from='aidear <onboarding@resend.dev>'}={}) {
   const reply=invitation.response;
+  const activities=reply.activities || [reply.activity || "Dinner"];
+  const activityNames=reply.activities ? activities.map(name=>name===CUSTOM_ACTIVITY?reply.customActivity:name).join(", ") : reply.customActivity || reply.activity || "Dinner";
   const status={accepted:"It's a date!", 'another-day':'Another day works better.',declined:'Not this time.'}[reply.status];
   const lines=[`A reply from ${invitation.recipient}`, '',status];
   if(reply.date){
     const date=new Intl.DateTimeFormat('en-MY',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'Asia/Kuala_Lumpur'}).format(new Date(reply.date+'T12:00:00+08:00'));
     const time=new Intl.DateTimeFormat('en-MY',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:'Asia/Kuala_Lumpur'}).format(new Date(`${reply.date}T${reply.time}:00+08:00`));
-    lines.push(`Day: ${date}`,`Time: ${time} (Malaysia time, GMT+8)`,`Activity: ${reply.customActivity || reply.activity || 'Dinner'}`);
+    lines.push(`Day: ${date}`,`Time: ${time} (Malaysia time, GMT+8)`,`Activities: ${activityNames}`);
   }
-  if(reply.date&&(!reply.activity||reply.activity==='Dinner'))lines.push(`Dinner: ${reply.cuisine}`);
+  if(reply.date&&activities.includes('Dinner'))lines.push(`Dinner: ${reply.cuisine}`);
   if(reply.date&&reply.ride)lines.push(`Ride: ${rideLabel(reply.ride)}`);
   if(reply.note)lines.push('',`Her note: ${reply.note}`);
   lines.push('','Keep this email for the plan details. New bookings are sent by email only.','','Sent by aidear. Your owner access code is never included in this email.');
