@@ -18,5 +18,5 @@ The user supplied Tenor search pages; these matching cat reactions were selected
 
 ## OIIA side cats
 
-- https://tenor.com/view/oiia-oiia-spinning-cat-ethel-cat-xertxetin-gif-11991428485676818070
-- Local asset: `public/images/oiia-cat.gif`, shown on both sides of the invite.
+- https://tenor.com/view/cat-spin-oiia-spinning-cat-oiia-very-fast-spin-oiia-fast-spinning-cat-gif-11002452809956994839
+- Local asset: `public/images/oiia-spinning-cat.gif`, shown on both sides of the invite.

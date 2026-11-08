@@ -4,7 +4,7 @@ import Cat from './Cat.jsx';
 import CatDate from './CatDate.jsx';
 import { dateActivities, CUSTOM_ACTIVITY, rideOptions, rideLabel } from './dateOptions.js';
 
-function SpinningCats(){return <><img className="oiia-side oiia-left" src="/images/oiia-cat.gif" alt="" aria-hidden="true" width="120" height="120"/><img className="oiia-side oiia-right" src="/images/oiia-cat.gif" alt="" aria-hidden="true" width="120" height="120"/></>;}
+function SpinningCats(){return <><img className="oiia-side oiia-left" src="/images/oiia-spinning-cat.gif" alt="" aria-hidden="true" width="120" height="120"/><img className="oiia-side oiia-right" src="/images/oiia-spinning-cat.gif" alt="" aria-hidden="true" width="120" height="120"/></>;}
 
 export default function DateInvite({ id, api, dateLabel, timeLabel, today }) {
   const [invite, setInvite] = useState(null), [error, setError] = useState(''), [step, setStep] = useState(0), [saved, setSaved] = useState(false), [busy, setBusy] = useState(false), [noFlipped, setNoFlipped] = useState(false);
