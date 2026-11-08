@@ -4,6 +4,18 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
-    "api/invitation.js": { "maxDuration": 30 }
-  }
+    "api/invitation.js": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/mia",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/mia/",
+      "destination": "/index.html"
+    }
+  ]
 }
