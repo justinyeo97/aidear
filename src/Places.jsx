@@ -19,10 +19,11 @@ export function PlaceCards({places, saved, toggle, addToDate}) {
 export function NearbyPlaces({idea, location, editPreferences, saved, toggle, close, addToDate}) {
   const [places,setPlaces]=useState([]),[loading,setLoading]=useState(false),[error,setError]=useState(''),[searched,setSearched]=useState(false);
   const [retry,setRetry]=useState(0);
+  const [slow,setSlow]=useState(false);
   useEffect(()=>{
     const request=new AbortController();
     async function search() {
-    setLoading(true);setError('');setPlaces([]);setSearched(false);
+    setLoading(true);setSlow(false);setError('');setPlaces([]);setSearched(false);
     try {
       const response=await fetch('/api/places?'+new URLSearchParams({idea:idea.id,location:location.trim()}),{signal:request.signal});
       if (!response.headers.get('content-type')?.includes('application/json')) throw Error('Start the app with npm.cmd run dev or npm.cmd run preview to use venue search. Live Server cannot run the search backend.');
@@ -32,12 +33,13 @@ export function NearbyPlaces({idea, location, editPreferences, saved, toggle, cl
     } catch(err) {if(!request.signal.aborted)setError(err.message || 'Could not load nearby places.');}
     finally {if(!request.signal.aborted)setLoading(false);}
     }
-    search();
-    return ()=>request.abort();
+    const slowTimer=setTimeout(()=>setSlow(true),8000);
+    search().finally(()=>clearTimeout(slowTimer));
+    return ()=>{request.abort();clearTimeout(slowTimer);};
   },[idea.id,location,retry]);
   return <section className="nearby-panel" aria-labelledby="nearby-title"><div className="nearby-heading"><div><span className="eyebrow muted">FIND YOUR SPOT</span><h2 id="nearby-title">Places for {idea.title.toLowerCase()}</h2></div><button className="surprise" onClick={close} aria-label="Close nearby places"><X size={18}/></button></div>
     <div className="search-context"><span><MapPin size={15}/> Near {location}</span><button className="text-button" onClick={editPreferences}>Change preferences</button></div>
-    {loading&&<p role="status" className="data-note"><LoaderCircle size={15} className="spin"/> Looking for places that fit your date...</p>}{error&&<div><p role="alert" className="error">{error}</p><button className="surprise" onClick={()=>setRetry(n=>n+1)}>Try again</button></div>}
+    {loading&&<p role="status" className="data-note"><LoaderCircle size={15} className="spin"/> {slow?'Still searching. Some locations take up to 50 seconds; you can keep browsing while we look.':'Looking for places that fit your date...'}</p>}{error&&<div><p role="alert" className="error">{error}</p><button className="surprise" onClick={()=>setRetry(n=>n+1)}>Try again</button></div>}
     <PlaceCards places={places} saved={saved} toggle={toggle} addToDate={addToDate}/>
     {searched&&!places.length&&<p className="data-note">No places found. Try a broader area.</p>}
     <p className="data-note">Google Local results via SerpApi. Check current hours and prices before heading out. Saved places stay in this browser.</p>

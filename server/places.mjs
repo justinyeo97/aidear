@@ -49,7 +49,8 @@ export function placesMiddleware(getKey, fetcher = fetch) {
       if (!pending.has(key)) {
         const promise = (async () => {
           const params = new URLSearchParams({engine: 'google_local', q: `${queries[idea]} in ${location}`, location, hl: 'en', api_key: apiKey});
-          const response = await fetcher(`https://serpapi.com/search.json?${params}`, {signal: AbortSignal.timeout(25000)});
+          // Leave headroom below the function's 60-second limit for a JSON response.
+          const response = await fetcher(`https://serpapi.com/search.json?${params}`, {signal: AbortSignal.timeout(50000)});
           if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? 'Venue search authentication failed. Check the server API key.' : response.status === 429 ? 'The venue search quota is unavailable. Try again later.' : 'The venue search service is unavailable. Try again shortly.');
           const raw = await response.json();
           if (raw.error) throw new Error('The provider could not complete this search. Check the location and your SerpApi account quota.');
@@ -60,11 +61,13 @@ export function placesMiddleware(getKey, fetcher = fetch) {
           return data;
         })();
         pending.set(key, promise);
+        // Only the originating request owns cleanup; concurrent callers share it.
+        promise.then(()=>pending.delete(key),()=>pending.delete(key));
       }
       const data = await pending.get(key);
       return send(200, data);
     } catch (error) {
-      return send(502, {error: error.name === 'TimeoutError' ? 'Venue search timed out. Please try again.' : error instanceof TypeError || error instanceof SyntaxError ? 'Could not reach the venue search service. Please try again.' : error.message});
-    } finally { pending.delete(key); }
+      return send(error.name === 'TimeoutError' ? 504 : 502, {error: error.name === 'TimeoutError' ? 'The venue provider is taking longer than expected. Please retry this search in a moment.' : error instanceof TypeError || error instanceof SyntaxError ? 'Could not reach the venue search service. Please try again.' : error.message});
+    }
   };
 }

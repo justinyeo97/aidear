@@ -48,3 +48,32 @@ test('normalizes optional fields and excludes unsafe thumbnail URLs',()=>{
   assert.equal(places[0].rating,null);
   assert.equal(new URL(places[0].mapsUrl).hostname,'www.google.com');
 });
+
+test('returns a retryable timeout and allows the next search to recover',async()=>{
+  let calls=0;
+  const handler=placesMiddleware(()=>'secret',async()=>{
+    calls++;
+    if(calls===1)throw new DOMException('Timed out','TimeoutError');
+    return {ok:true,json:async()=>({local_results:[]})};
+  });
+  const url='/api/places?idea=archery&location=Timeouttown';
+  const failed=await request(handler,url);
+  assert.equal(failed.status,504);
+  assert.match(failed.body.error,/retry/i);
+  assert.equal((await request(handler,url)).status,200);
+  assert.equal(calls,2);
+});
+
+test('concurrent searches share one provider request',async()=>{
+  let calls=0,release;
+  const gate=new Promise(resolve=>{release=resolve;});
+  const handler=placesMiddleware(()=>'secret',async()=>{
+    calls++;await gate;return {ok:true,json:async()=>({local_results:[]})};
+  });
+  const url='/api/places?idea=minigolf&location=Concurrenttown';
+  const a=request(handler,url),b=request(handler,url);
+  release();
+  const results=await Promise.all([a,b]);
+  assert.deepEqual(results.map(r=>r.status),[200,200]);
+  assert.equal(calls,1);
+});
