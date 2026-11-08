@@ -1,4 +1,5 @@
 import React, {useState, useEffect} from 'react';
+import SpotlightCard from './components/react-bits/SpotlightCard.jsx';
 import {Heart, MapPin, ArrowUpRight, LoaderCircle, X} from 'lucide-react';
 
 export function readPlaces() {
@@ -10,10 +11,10 @@ export function readPlaces() {
 export function PlaceCards({places, saved, toggle, addToDate}) {
   return <div className="place-grid">{places.map(place => <article className="place-card" key={place.id}>
     {place.image && /^https?:\/\//.test(place.image) && <img src={place.image} alt="" loading="lazy" onError={e => {e.currentTarget.style.display='none'}}/>}
-    <div className="place-content"><h3>{place.name}</h3><p><MapPin size={13}/> {place.address || 'Address unavailable'}</p>
+    <SpotlightCard className="place-content venue-spotlight" theme="light" spotlightColor="#d4ad91" intensity={0.35} borderGlow={0.25} proximity={0}><h3>{place.name}</h3><p><MapPin size={13}/> {place.address || 'Address unavailable'}</p>
     {place.rating != null && <p>Rating: {place.rating} / 5 {place.reviews != null ? `(${place.reviews} reviews)` : ''}</p>}
     {place.price && <p>Price level: {place.price}</p>}{place.hours && <p>{place.hours}</p>}
-    <div className="place-actions"><a href={place.mapsUrl} target="_blank" rel="noopener noreferrer">Google Maps <ArrowUpRight size={14}/></a><button onClick={()=>toggle(place)} aria-label={`${saved.some(p=>p.id===place.id)?'Unsave':'Save'} ${place.name}`} aria-pressed={saved.some(p=>p.id===place.id)}><Heart size={18} fill={saved.some(p=>p.id===place.id)?'currentColor':'none'}/></button></div>{addToDate&&<button className="surprise itinerary-add" onClick={()=>addToDate(place)}>Add to my date</button>}</div>
+    <div className="place-actions"><a href={place.mapsUrl} target="_blank" rel="noopener noreferrer">Google Maps <ArrowUpRight size={14}/></a><button onClick={()=>toggle(place)} aria-label={`${saved.some(p=>p.id===place.id)?'Unsave':'Save'} ${place.name}`} aria-pressed={saved.some(p=>p.id===place.id)}><Heart size={18} fill={saved.some(p=>p.id===place.id)?'currentColor':'none'}/></button></div>{addToDate&&<button className="surprise itinerary-add" onClick={()=>addToDate(place)}>Add to my date</button>}</SpotlightCard>
   </article>)}</div>;
 }
 export function NearbyPlaces({idea, location, editPreferences, saved, toggle, close, addToDate}) {

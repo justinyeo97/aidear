@@ -1,0 +1,9 @@
+/* React Bits surfaces retain aidear's warm, quiet palette. */
+.scene-magnet-inner{width:100%;height:100%}
+.spotlight-card.activity-spotlight{padding:20px 22px 0;border-radius:0;background-color:#fffef9;box-shadow:none}
+.spotlight-card.venue-spotlight{padding:17px;border-radius:0;background-color:#fffef9;box-shadow:none}
+.activity-spotlight>.spotlight-card__border,.venue-spotlight>.spotlight-card__border{display:none}
+.magnet-cta .find-button{width:100%}
+@media(max-width:1000px){.spotlight-card.activity-spotlight{padding:17px 17px 0}}
+@media(max-width:700px){.spotlight-card.activity-spotlight{padding:21px 23px 0}.magnet-cta,.magnet-cta>div{width:100%}}
+@media(prefers-reduced-motion:reduce),(hover:none){.cat-sticker [data-magnet-active]>div,.cat-date-frame [data-magnet-active]>div,.magnet-cta>div{transform:none!important}.spotlight-card__light,.spotlight-card__edge{display:none}}
