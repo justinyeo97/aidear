@@ -18,5 +18,5 @@ The user supplied Tenor search pages; these matching cat reactions were selected
 
 ## OIIA side cats
 
-- https://tenor.com/view/cat-spin-oiia-spinning-cat-oiia-very-fast-spin-oiia-fast-spinning-cat-gif-11002452809956994839
-- Local asset: `public/images/oiia-spinning-cat.gif`, shown on both sides of the invite.
+- https://myemotes.io/es/emotes/oiia_oiia_cat_spin
+- Local asset: `public/images/oiia-transparent.gif`, shown on both sides of the invite.
