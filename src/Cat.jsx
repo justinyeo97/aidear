@@ -1,17 +1,30 @@
 import React, {useState, useEffect, useRef} from 'react';
+import {scratchStep} from './headScratch.js';
 
 export default function Cat({small=false}) {
   const [petted,setPetted]=useState(false);
   const timer=useRef(null);
+  const svgRef=useRef(null),scratch=useRef(null),pointerType=useRef('mouse');
   useEffect(()=>()=>clearTimeout(timer.current),[]);
   function pet() {
     clearTimeout(timer.current);
     setPetted(true);
     timer.current=setTimeout(()=>setPetted(false),2200);
   }
-  return <button type="button" className={`cat-friend ${small?'cat-friend-small':''} ${petted?'is-purring':''}`} onClick={pet} aria-label="Pet your wingcat" title="Give your wingcat a little love">
-    <span className="cat-greeting" aria-live="polite">{petted?'Prrr... lovely choice.':'Psst... a little head scratch?'}</span>
-    <span className="cat-motion"><svg className={small?'cat small':'cat'} viewBox="0 0 260 220" fill="none" aria-hidden="true">
+  function scratchHead(event) {
+    if(event.pointerType==='touch')return;
+    const matrix=svgRef.current?.getScreenCTM();
+    if(!matrix)return;
+    const point=new DOMPoint(event.clientX,event.clientY).matrixTransform(matrix.inverse());
+    const onHead=((point.x-130)/78)**2+((point.y-108)/65)**2<=1;
+    if(!onHead){scratch.current=null;return;}
+    const step=scratchStep(scratch.current,event.clientX,performance.now());
+    scratch.current=step.state;
+    if(step.petted)pet();
+  }
+  return <button type="button" className={`cat-friend ${small?'cat-friend-small':''} ${petted?'is-purring':''}`} onPointerMove={scratchHead} onPointerLeave={()=>{scratch.current=null}} onPointerDown={e=>{pointerType.current=e.pointerType}} onClick={e=>{if(e.detail===0||pointerType.current==='touch'||pointerType.current==='pen')pet()}} aria-label="Scratch your wingcat's head by moving the pointer back and forth, or press Enter to pet" title="Move back and forth over my head to give me a scratch">
+    <span className="cat-greeting" aria-live="polite">{petted?'Prrr... that is the spot.':'Rub my head back and forth.'}</span>
+    <span className="cat-motion"><svg ref={svgRef} className={small?'cat small':'cat'} viewBox="0 0 260 220" fill="none" aria-hidden="true">
       <g className="cat-tail"><path d="M174 191c54 16 74-13 60-30-11-14-26 1-16 10" stroke="#514735" strokeWidth="17" strokeLinecap="round"/><path d="M174 191c54 16 74-13 60-30-11-14-26 1-16 10" stroke="#e8c8a4" strokeWidth="12" strokeLinecap="round"/></g>
       <g className="cat-head">
         <g className="cat-ear-left"><path d="M66 93 50 23q-2-10 9-3l53 34" fill="#e8c8a4" stroke="#514735" strokeWidth="3" strokeLinejoin="round"/><path d="m61 35 10 43 27-23" fill="#d69486"/></g>
