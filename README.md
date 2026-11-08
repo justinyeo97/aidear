@@ -6,7 +6,7 @@ A personal date invitation for Mia. The public activity-planning app has been re
 
 1. Open the private owner access link or enter `INVITE_ADMIN_KEY` at `/?owner=1`.
 2. Create an invitation with names and a personal note, then copy the generated link and send it yourself.
-3. The recipient opens the invitation, accepts or suggests another day, and chooses a date, time and dinner cuisine. Declining is also supported. The same link is reusable: after replying, use Update my reply or plan another date. Upcoming date options refresh each time the link is loaded.
+3. The recipient starts with a Yes/No question, then chooses a day, time and dinner cuisine one screen at a time. The opening No button briefly changes to Yes as a visual joke and opens the questions; it never submits a reply. The final review requires explicit confirmation and includes a genuine decline option. The same link is reusable after replying. Upcoming date options refresh each time the link is loaded.
 4. The reply is saved privately first, then a Resend email is sent to the owner with the response, date, time, cuisine and note. The owner desk also refreshes every 15 seconds while visible and shows an unread-reply banner and tab-title count.
 
 All dates and times use Asia/Kuala_Lumpur (MYT, GMT+8). Each invitation offers the next three Friday/Saturday/Sunday dates and accepts a different future date, custom time, and an optional note.
