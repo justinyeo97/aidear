@@ -7,3 +7,5 @@
 .revoke-link{margin-left:auto;font-size:10px;background:none;border:0;color:#a08a78;text-decoration:underline}.invite-paper .button:disabled{cursor:wait}
 
 .email-status{border-top:1px solid #d9e2ca;margin:15px 0;padding-top:12px;display:flex;align-items:flex-start;gap:10px;flex-direction:column}.email-status>small{font-size:10px;color:#839173}
+
+.reply-history{margin:14px 0;font-size:11px;color:#7d8d6b}.reply-history summary{cursor:pointer}.reply-history>div{padding:12px 0;border-bottom:1px solid #dde5d0}.reply-history p{line-height:1.8;margin-top:5px;white-space:pre-line}

@@ -34,7 +34,7 @@ test('reply is durable, owner-only, and repeated submissions do not overwrite it
  assert.equal((await request('reply',{id,body})).status,200);
  const guest=await request('view',{id});assert.equal(guest.data.invitation.responded,true);assert.equal('response' in guest.data.invitation,false);
  const owner=await request('owner',{owner:true});assert.equal(owner.data.invitations[0].response.cuisine,'Japanese');assert.equal(owner.data.invitations[0].seenAt,null);
- assert.equal((await request('reply',{id,body:{...body,cuisine:'Italian'}})).data.alreadyReplied,true);
+ assert.equal((await request('reply',{id,body})).data.alreadyReplied,true);
  assert.equal(docs.get(id).data.response.cuisine,'Japanese');
  await request('seen',{id,owner:true,body:{}});assert.ok(docs.get(id).data.seenAt);
 });
@@ -73,4 +73,22 @@ test('email failure preserves the reply and allows owner-only retry',async()=>{
  assert.equal((await request('retry-email',{id,owner:true,body:{}})).status,200);
  assert.equal(docs.get(id).data.notification.status,'sent');
  await request('retry-email',{id,owner:true,body:{}});assert.equal(calls,2);
+});
+
+test('same invitation accepts another reply, preserves history, and notifies again',async()=>{
+ let calls=0;
+ const {request,docs}=setup({notify:async()=>({emailId:`mail-${++calls}`,sentAt:new Date().toISOString()})});
+ const created=await request('create',{owner:true,body:{recipient:'Mia'}});const id=created.data.invitation.id;
+ const body={status:'accepted',date:suggestedDates()[0],time:'19:00',cuisine:'Japanese',submissionId:'first-submission-id'};
+ await request('reply',{id,body});
+ const firstId=docs.get(id).data.response.id;
+ await request('seen',{id,owner:true,body:{}});
+ const second=await request('reply',{id,body:{...body,time:'20:00',cuisine:'Italian',submissionId:'second-submission-id'}});
+ assert.equal(second.status,200);assert.equal(calls,2);
+ assert.equal(docs.get(id).data.response.cuisine,'Italian');
+ assert.notEqual(docs.get(id).data.response.id,firstId);
+ assert.equal(docs.get(id).data.responseHistory[0].cuisine,'Japanese');
+ assert.equal(docs.get(id).data.seenAt,null);
+ const guest=await request('view',{id});assert.equal('responseHistory' in guest.data.invitation,false);
+ await request('reply',{id,body});assert.equal(calls,2);assert.equal(docs.get(id).data.response.cuisine,'Italian');
 });

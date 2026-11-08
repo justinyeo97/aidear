@@ -11,7 +11,7 @@ test('email contains the reply details in Malaysia time without owner credential
 test('uses the configured recipient and stable provider idempotency key',async()=>{
  let captured;
  const result=await sendReplyEmail(invitation,{key:'private-key',to:'owner@example.test',fetcher:async(url,options)=>{captured=options;return {ok:true,json:async()=>({id:'email-1'})};}});
- assert.equal(result.emailId,'email-1');assert.equal(captured.headers['Idempotency-Key'],'aidear-reply/test-id');
+ assert.equal(result.emailId,'email-1');assert.equal(captured.headers['Idempotency-Key'],'aidear-reply/test-id/initial');
  assert.deepEqual(JSON.parse(captured.body).to,['owner@example.test']);assert.equal(captured.body.includes('private-key'),false);
 });
 test('reports sender restrictions without exposing provider response or key',async()=>{

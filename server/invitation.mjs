@@ -32,7 +32,7 @@ export function invitationHandler({store=blobStore,key=()=>process.env.INVITE_AD
     try{notification={status:'sent',...await notify(invitation)};}
     catch(error){notification={status:'failed',error:error.name==='TimeoutError'?'Email delivery was not confirmed in time. You can retry safely within 24 hours.':error instanceof TypeError?'Email service could not be reached. Try again later.':error.message,attemptedAt:new Date().toISOString()};}
     // Merge into the latest copy so an owner's mark-as-seen isn't overwritten.
-    try{for(let attempt=0;attempt<2;attempt++){const latest=await store.read(invitation.id);if(!latest||latest.data.notification?.status==='sent')return latest?.data.notification||notification;try{await store.write({...latest.data,notification},latest.etag);return notification;}catch(error){if(!(error instanceof BlobPreconditionFailedError)||attempt===1)throw error;}}}
+    try{for(let attempt=0;attempt<2;attempt++){const latest=await store.read(invitation.id);if(!latest||latest.data.response?.id!==invitation.response?.id||latest.data.notification?.status==='sent')return latest?.data.notification||notification;try{await store.write({...latest.data,notification},latest.etag);return notification;}catch(error){if(!(error instanceof BlobPreconditionFailedError)||attempt===1)throw error;}}}
     catch{console.error('Could not persist email delivery status');}
     return notification;
   }
@@ -64,10 +64,12 @@ export function invitationHandler({store=blobStore,key=()=>process.env.INVITE_AD
       }
       const id=url.searchParams.get('id');if(!isId(id))return send(404,{error:'This invitation link is not available.'});
       const record=await store.read(id);if(!record)return send(404,{error:'This invitation link is not available.'});
-      if(action==='view'&&req.method==='GET'){const {response,seenAt,notification,...invite}=record.data;return send(200,{invitation:{...invite,responded:Boolean(response)}});}
+      if(action==='view'&&req.method==='GET'){const {response,responseHistory,seenAt,notification,...invite}=record.data;return send(200,{invitation:{...invite,dates:suggestedDates(),responded:Boolean(response)}});}
       if(action==='reply'&&req.method==='POST'){
-        if(record.data.response)return send(200,{saved:true,alreadyReplied:true});
-        const body=await readBody(req);const reply=validateReply(body);const updated={...record.data,response:{...reply,receivedAt:new Date().toISOString()},seenAt:null,notification:{status:'pending'}};
+        const body=await readBody(req);const reply=validateReply(body);
+        const submissionId=typeof body.submissionId==='string'&&/^[a-zA-Z0-9-]{16,64}$/.test(body.submissionId)?body.submissionId:sign(JSON.stringify(reply),secret);
+        if(record.data.response?.submissionId===submissionId||(record.data.responseHistory||[]).some(r=>r.submissionId===submissionId))return send(200,{saved:true,alreadyReplied:true});
+        const updated={...record.data,responseHistory:[...(record.data.responseHistory||[]),...(record.data.response?[record.data.response]:[])],response:{...reply,id:randomBytes(12).toString('hex'),submissionId,receivedAt:new Date().toISOString()},seenAt:null,notification:{status:'pending'}};
         await store.write(updated,record.etag);
         await notifyOwner(updated);
         return send(200,{saved:true});

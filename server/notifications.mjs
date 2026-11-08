@@ -16,7 +16,7 @@ export async function sendReplyEmail(invitation,{fetcher=fetch,key=process.env.R
   if(!key||!to)throw Error('Email notifications are not configured on the server.');
   const payload=replyEmail(invitation,{to,from});
   const response=await fetcher('https://api.resend.com/emails',{
-    method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json','Idempotency-Key':`aidear-reply/${invitation.id}`},
+    method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json','Idempotency-Key':`aidear-reply/${invitation.id}/${invitation.response.id || 'initial'}`},
     body:JSON.stringify(payload),signal:AbortSignal.timeout(10000)
   });
   if(!response.ok)throw Error(response.status===403?'Resend did not permit this sender or recipient. Check the sender configuration.':response.status===401?'Resend authentication failed. Check the server email key.':response.status===429?'Email service limit reached. Try again later.':'Email service could not accept this notification. Try again later.');
