@@ -1,0 +1,7 @@
+.env*
+.git
+.openai
+.vscode
+node_modules
+dist
+*.tar.gz

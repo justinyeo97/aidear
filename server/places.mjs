@@ -39,7 +39,7 @@ export function placesMiddleware(getKey, fetcher = fetch) {
     const key = `${idea}:${location.toLowerCase()}`;
     const cached = cache.get(key);
     if (cached && cached.expires > Date.now()) return send(200, cached.data);
-    const client = req.socket.remoteAddress || 'local';
+    const client = (process.env.VERCEL && req.headers?.['x-vercel-forwarded-for']) || req.socket?.remoteAddress || 'local';
     const rate = requests.get(client);
     const window = rate && rate.expires > Date.now() ? rate : {count: 0, expires: Date.now() + 60000};
     if (window.count >= 10) return send(429, {error: 'Please wait a minute before searching for more places.'});
