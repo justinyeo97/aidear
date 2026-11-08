@@ -30,5 +30,5 @@ test('email includes the suggested activity rather than its picker label',()=>{
 
 test('email includes her ride preference',()=>{
  const mail=replyEmail({...invitation,response:{...invitation.response,ride:'pickup'}},{to:'owner@example.test'});
- assert.match(mail.text,/Ride: Yes, come get me/);
+ assert.match(mail.text,/Ride: Lai/);
 });

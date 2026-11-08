@@ -115,7 +115,7 @@ test('custom activities are validated, trimmed, and do not require a cuisine',()
 
 test('ride preference accepts only the offered choices and supports older replies',()=>{
  const body={status:'accepted',date:suggestedDates()[0],time:'19:00',activity:'Movies'};
- for(const ride of ['pickup','own','decide'])assert.equal(validateReply({...body,ride}).ride,ride);
+ for(const ride of ['pickup','own'])assert.equal(validateReply({...body,ride}).ride,ride);
  assert.equal(validateReply(body).ride,null);
- assert.throws(()=>validateReply({...body,ride:'invalid'}),/ride/);
+ assert.throws(()=>validateReply({...body,ride:'decide'}),/ride/);
 });

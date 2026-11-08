@@ -15,3 +15,8 @@ The user supplied Tenor search pages; these matching cat reactions were selected
 - Cheeky cat: https://tenor.com/view/mwahaha-cat-meme-cute-evil-smile-gif-4624225634802794928
 - Sad cat: https://tenor.com/view/sad-cat-sad-kitty-kitten-sad-kitty-gif-4522442806216211408
 - Local assets: `public/images/cheeky-cat.gif` and `public/images/sad-cat.gif`.
+
+## OIIA side cats
+
+- https://tenor.com/view/oiia-oiia-spinning-cat-ethel-cat-xertxetin-gif-11991428485676818070
+- Local asset: `public/images/oiia-cat.gif`, shown on both sides of the invite.

@@ -1,24 +1,23 @@
 export const CUSTOM_ACTIVITY='My own idea';
 export const rideOptions=[
-  {value:'pickup',label:'Yes, come get me',description:'Passenger princess mode: on.'},
-  {value:'own',label:"I'll make my own entrance",description:'Meet you there, looking cute.'},
-  {value:'decide',label:"Let's figure it out",description:'Transport is a future-us problem.'},
+  {value:'pickup',label:'Lai',description:'Passenger princess mode: on.'},
+  {value:'own',label:"Wo Zhi Ji Vroom Vroom",description:'Meet you there, looking cute.'},
 ];
-export const rideLabel=value=>rideOptions.find(option=>option.value===value)?.label || 'Not specified';
+export const rideLabel=value=>rideOptions.find(option=>option.value===value)?.label || (value==='decide'?"Let's figure it out":'Not specified');
 export const dateActivities = [
   {name:CUSTOM_ACTIVITY,description:'Got something else in mind? Tell me'},
-  {name:'Dinner',description:'Good food and a proper catch-up'},
-  {name:'Coffee',description:'Something warm and an easy chat'},
+  {name:'Dinner',description:'Nom Nom'},
+  {name:'Coffee',description:'Slrrp Slrrp'},
   {name:'Ring making',description:'Make a little keepsake for each other'},
-  {name:'Jewellery making',description:'Beads, charms, and something that is ours'},
+  {name:'Jewellery making',description:'Bling bling mouu'},
   {name:'Candle making',description:'Pick a scent and make something cosy'},
-  {name:'Perfume workshop',description:'Mix a scent that reminds us of today'},
-  {name:'Movies',description:'A film, popcorn, and your company'},
-  {name:'Mini golf',description:'A little friendly competition'},
+  {name:'Perfume workshop',description:'Xiang Xiang'},
+  {name:'Movies',description:'wo he ni kan xi'},
+  {name:'Mini golf',description:'ni ken ding shu hehe'},
   {name:'Bowling',description:'A few strikes, a few laughs'},
-  {name:'Picnic',description:'Fresh air and our favourite snacks'},
-  {name:'Arcade',description:'You can be my player two'},
-  {name:'Pottery',description:'Make something a little wonky'},
+  {name:'Picnic',description:'lang man'},
+  {name:'Arcade',description:'zhe ge ni ye shi hui shu'},
+  {name:'Pottery',description:'kan shui de shou bi jiao geng'},
   {name:'Ceramic painting',description:'Paint a mug for our next coffee date'},
   {name:'Painting workshop',description:'A blank canvas and zero pressure'},
   {name:'Tufting workshop',description:'Make a fluffy little rug together'},
