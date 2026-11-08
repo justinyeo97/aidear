@@ -102,3 +102,13 @@ test('activity choices only require a cuisine for dinner',()=>{
  assert.throws(()=>validateReply({...body,activity:'unknown'}),/activity/);
  assert.equal(validateReply({...body,cuisine:'Japanese'}).activity,'Dinner');
 });
+
+test('custom activities are validated, trimmed, and do not require a cuisine',()=>{
+ const body={status:'accepted',date:suggestedDates()[0],time:'19:00',activity:'My own idea'};
+ const reply=validateReply({...body,customActivity:'  A bookstore crawl  ',cuisine:'Italian'});
+ assert.equal(reply.customActivity,'A bookstore crawl');assert.equal(reply.cuisine,null);
+ assert.throws(()=>validateReply(body),/activity/);
+ assert.throws(()=>validateReply({...body,customActivity:' '.repeat(10)}),/activity/);
+ assert.throws(()=>validateReply({...body,customActivity:'a'.repeat(101)}),/activity/);
+ assert.equal(validateReply({...body,activity:'Movies',customActivity:'Ignored'}).customActivity,null);
+});

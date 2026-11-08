@@ -1,4 +1,6 @@
+export const CUSTOM_ACTIVITY='My own idea';
 export const dateActivities = [
+  {name:CUSTOM_ACTIVITY,description:'Got something else in mind? Tell me'},
   {name:'Dinner',description:'Good food and a proper catch-up'},
   {name:'Coffee',description:'Something warm and an easy chat'},
   {name:'Ring making',description:'Make a little keepsake for each other'},

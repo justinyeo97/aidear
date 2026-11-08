@@ -22,3 +22,8 @@ test('non-dinner reply email names the activity and omits dinner cuisine',()=>{
  const mail=replyEmail({...invitation,response:{...invitation.response,activity:'Mini golf',cuisine:null}},{to:'owner@example.test'});
  assert.match(mail.text,/Activity: Mini golf/);assert.equal(mail.text.includes('Dinner:'),false);
 });
+
+test('email includes the suggested activity rather than its picker label',()=>{
+ const mail=replyEmail({...invitation,response:{...invitation.response,activity:'My own idea',customActivity:'A bookstore crawl',cuisine:null}},{to:'owner@example.test'});
+ assert.match(mail.text,/Activity: A bookstore crawl/);assert.equal(mail.text.includes('Activity: My own idea'),false);
+});

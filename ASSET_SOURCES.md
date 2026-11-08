@@ -7,3 +7,11 @@ The invitation opening-screen image was supplied by the user via this Pinterest 
 - Local asset: `public/images/invite-cat.jpg`
 
 The image is included as supplied and is not claimed as original aidear artwork.
+
+## Button reaction GIFs
+
+The user supplied Tenor search pages; these matching cat reactions were selected from the results:
+
+- Cheeky cat: https://tenor.com/view/mwahaha-cat-meme-cute-evil-smile-gif-4624225634802794928
+- Sad cat: https://tenor.com/view/sad-cat-sad-kitty-kitten-sad-kitty-gif-4522442806216211408
+- Local assets: `public/images/cheeky-cat.gif` and `public/images/sad-cat.gif`.
