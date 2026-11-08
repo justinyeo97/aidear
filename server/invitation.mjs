@@ -73,12 +73,12 @@ export function invitationHandler({store=blobStore,key=()=>process.env.INVITE_AD
       if(action==='view'&&req.method==='GET'){const {response,responseHistory,seenAt,notification,...invite}=record.data;return send(200,{invitation:{...invite,message:invitationMessage(invite.message),dates:suggestedDates(),responded:Boolean(response)}});}
       if(action==='reply'&&req.method==='POST'){
         const body=await readBody(req);const reply=validateReply(body);
-        const submissionId=typeof body.submissionId==='string'&&/^[a-zA-Z0-9-]{16,64}$/.test(body.submissionId)?body.submissionId:sign(JSON.stringify(reply),secret);
-        if(record.data.response?.submissionId===submissionId||(record.data.responseHistory||[]).some(r=>r.submissionId===submissionId))return send(200,{saved:true,alreadyReplied:true});
-        const updated={...record.data,responseHistory:[...(record.data.responseHistory||[]),...(record.data.response?[record.data.response]:[])],response:{...reply,id:randomBytes(12).toString('hex'),submissionId,receivedAt:new Date().toISOString()},seenAt:null,notification:{status:'pending'}};
-        await store.write(updated,record.etag);
-        await notifyOwner(updated);
-        return send(200,{saved:true});
+        const submissionId=typeof body.submissionId==='string'&&/^[a-zA-Z0-9-]{16,64}$/.test(body.submissionId)?body.submissionId:randomBytes(16).toString('hex');
+        // A stable provider key makes retries safe without storing booking details.
+        const response={...reply,id:sign(id+':'+submissionId,secret),receivedAt:new Date().toISOString()};
+        try{await notify({...record.data,response});}
+        catch{return send(502,{error:'Your email could not be confirmed. Please try sending again. Your picks are still here.'});}
+        return send(200,{sent:true});
       }
       if(action==='retry-email'&&req.method==='POST'){
         if(!record.data.response)return send(400,{error:'No reply to email yet.'});

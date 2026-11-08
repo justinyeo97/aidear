@@ -27,17 +27,6 @@ test('owner can create an invitation; guests cannot read the private desk',async
  assert.equal(created.status,201);assert.match(created.data.invitation.id,/^[a-f0-9]{48}$/);
  assert.equal(created.data.invitation.recipient,'Mia');assert.equal(created.data.invitation.dates.length,3);
 });
-test('reply is durable, owner-only, and repeated submissions do not overwrite it',async()=>{
- const {request,docs}=setup();
- const created=await request('create',{owner:true,body:{recipient:'Mia'}});const id=created.data.invitation.id;
- const body={status:'accepted',date:suggestedDates()[0],time:'19:00',cuisine:'Japanese',note:'No shellfish please'};
- assert.equal((await request('reply',{id,body})).status,200);
- const guest=await request('view',{id});assert.equal(guest.data.invitation.responded,true);assert.equal('response' in guest.data.invitation,false);
- const owner=await request('owner',{owner:true});assert.equal(owner.data.invitations[0].response.cuisine,'Japanese');assert.equal(owner.data.invitations[0].seenAt,null);
- assert.equal((await request('reply',{id,body})).data.alreadyReplied,true);
- assert.equal(docs.get(id).data.response.cuisine,'Japanese');
- await request('seen',{id,owner:true,body:{}});assert.ok(docs.get(id).data.seenAt);
-});
 test('validates time, cuisine, dates and accepts a respectful decline',()=>{
  const body={status:'accepted',date:suggestedDates()[0],time:'19:00',cuisine:'Italian'};
  assert.equal(validateReply(body).timezone,'Asia/Kuala_Lumpur');
@@ -53,45 +42,8 @@ test('rejects cross-origin writes and only sets a private HttpOnly owner cookie'
  const login=await request('session',{body:{key}});assert.equal(login.status,200);assert.match(login.headers['Set-Cookie'],/HttpOnly; SameSite=Strict/);assert.equal(JSON.stringify(login.data).includes(key),false);
 });
 
-test('saves a reply before notifying and does not resend on repeated submission',async()=>{
- let calls=0;
- const {request,docs}=setup({notify:async invite=>{calls++;assert.equal(docs.get(invite.id).data.response.cuisine,'Korean');return {emailId:'notification-1',sentAt:new Date().toISOString()};}});
- const created=await request('create',{owner:true,body:{recipient:'Mia'}});const id=created.data.invitation.id;
- const body={status:'accepted',date:suggestedDates()[0],time:'18:00',cuisine:'Korean'};
- await request('reply',{id,body});await request('reply',{id,body});
- assert.equal(calls,1);assert.equal(docs.get(id).data.notification.status,'sent');
- const guest=await request('view',{id});assert.equal('notification' in guest.data.invitation,false);
-});
 
-test('email failure preserves the reply and allows owner-only retry',async()=>{
- let calls=0;
- const {request,docs}=setup({notify:async()=>{if(++calls===1)throw Error('Email service unavailable');return {emailId:'recovered',sentAt:new Date().toISOString()};}});
- const created=await request('create',{owner:true,body:{recipient:'Mia'}});const id=created.data.invitation.id;
- const response=await request('reply',{id,body:{status:'declined',note:'Another time'}});
- assert.equal(response.status,200);assert.equal(docs.get(id).data.response.status,'declined');assert.equal(docs.get(id).data.notification.status,'failed');
- assert.equal((await request('retry-email',{id,body:{}})).status,401);
- assert.equal((await request('retry-email',{id,owner:true,body:{}})).status,200);
- assert.equal(docs.get(id).data.notification.status,'sent');
- await request('retry-email',{id,owner:true,body:{}});assert.equal(calls,2);
-});
 
-test('same invitation accepts another reply, preserves history, and notifies again',async()=>{
- let calls=0;
- const {request,docs}=setup({notify:async()=>({emailId:`mail-${++calls}`,sentAt:new Date().toISOString()})});
- const created=await request('create',{owner:true,body:{recipient:'Mia'}});const id=created.data.invitation.id;
- const body={status:'accepted',date:suggestedDates()[0],time:'19:00',cuisine:'Japanese',submissionId:'first-submission-id'};
- await request('reply',{id,body});
- const firstId=docs.get(id).data.response.id;
- await request('seen',{id,owner:true,body:{}});
- const second=await request('reply',{id,body:{...body,time:'20:00',cuisine:'Italian',submissionId:'second-submission-id'}});
- assert.equal(second.status,200);assert.equal(calls,2);
- assert.equal(docs.get(id).data.response.cuisine,'Italian');
- assert.notEqual(docs.get(id).data.response.id,firstId);
- assert.equal(docs.get(id).data.responseHistory[0].cuisine,'Japanese');
- assert.equal(docs.get(id).data.seenAt,null);
- const guest=await request('view',{id});assert.equal('responseHistory' in guest.data.invitation,false);
- await request('reply',{id,body});assert.equal(calls,2);assert.equal(docs.get(id).data.response.cuisine,'Italian');
-});
 
 test('activity choices only require a cuisine for dinner',()=>{
  const body={status:'accepted',date:suggestedDates()[0],time:'19:00'};
@@ -118,4 +70,25 @@ test('ride preference accepts only the offered choices and supports older replie
  for(const ride of ['pickup','own'])assert.equal(validateReply({...body,ride}).ride,ride);
  assert.equal(validateReply(body).ride,null);
  assert.throws(()=>validateReply({...body,ride:'decide'}),/ride/);
+});
+
+
+test('each new booking emails the owner without storing booking details',async()=>{
+ const messages=[];const {request,docs}=setup({notify:async invite=>{messages.push(structuredClone(invite));return {emailId:'mail'};}});
+ const created=await request('create',{owner:true,body:{recipient:'Mia'}});const id=created.data.invitation.id;
+ const original=structuredClone(docs.get(id));
+ const body={status:'accepted',date:suggestedDates()[0],time:'19:00',cuisine:'Japanese',submissionId:'first-submission-id'};
+ for(const submissionId of ['first-submission-id','second-submission-id','third-submission-id'])assert.equal((await request('reply',{id,body:{...body,submissionId}})).data.sent,true);
+ assert.equal(messages.length,3);assert.equal(new Set(messages.map(m=>m.response.id)).size,3);
+ assert.equal(messages[0].response.cuisine,'Japanese');assert.deepEqual(docs.get(id),original);
+ await request('reply',{id,body});assert.equal(messages[3].response.id,messages[0].response.id);
+ assert.equal((await request('view',{id})).data.invitation.responded,false);
+});
+test('email failure returns an error and retry keeps its provider key without saving details',async()=>{
+ const messages=[];const {request,docs}=setup({notify:async invite=>{messages.push(invite);if(messages.length===1)throw Error('Unavailable');return {emailId:'recovered'};}});
+ const created=await request('create',{owner:true,body:{recipient:'Mia'}});const id=created.data.invitation.id;const original=structuredClone(docs.get(id));
+ const body={status:'declined',note:'Another time',submissionId:'retry-submission-id'};
+ assert.equal((await request('reply',{id,body})).status,502);
+ assert.equal((await request('reply',{id,body})).status,200);
+ assert.equal(messages[0].response.id,messages[1].response.id);assert.deepEqual(docs.get(id),original);
 });

@@ -6,7 +6,7 @@ test('email contains the reply details in Malaysia time without owner credential
  const mail=replyEmail(invitation,{to:'owner@example.test'});
  assert.deepEqual(mail.to,['owner@example.test']);assert.equal(mail.from,'aidear <onboarding@resend.dev>');
  assert.match(mail.text,/Japanese/);assert.match(mail.text,/Vegetarian options/);assert.match(mail.text,/GMT\+8/);
- assert.match(mail.text,/19:00|7:00/);assert.match(mail.text,/owner=1/);
+ assert.match(mail.text,/19:00|7:00/);assert.match(mail.text,/email only/);
 });
 test('uses the configured recipient and stable provider idempotency key',async()=>{
  let captured;
